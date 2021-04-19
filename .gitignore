@@ -1,2 +1,5 @@
 .DS_Store
 .DS_STORE
+
+master_data/*
+slave_data/*
