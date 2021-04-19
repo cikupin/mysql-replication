@@ -1,0 +1,51 @@
+version: '2.1'
+
+services:
+  mysql-master:
+    image: bitnami/mysql:5.7.33
+    ports:
+      - '3601:3306'
+    volumes:
+      - './master_data:/bitnami/mysql/data'
+    environment:
+      - MYSQL_REPLICATION_MODE=master
+      - MYSQL_REPLICATION_USER=repl_user
+      - MYSQL_REPLICATION_PASSWORD=my-repl-password
+      - ALLOW_EMPTY_PASSWORD=no
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
+      interval: 15s
+      timeout: 5s
+      retries: 6
+    networks:
+      - net-replication
+
+  mysql-slave:
+    image: bitnami/mysql:5.7.33
+    ports:
+      - '3602:3306'
+    volumes:
+      - './slave_data:/bitnami/mysql/data'
+    depends_on:
+      - mysql-master
+    environment:
+      - MYSQL_REPLICATION_MODE=slave
+      - MYSQL_REPLICATION_USER=repl_user
+      - MYSQL_REPLICATION_PASSWORD=my-repl-password
+      - MYSQL_MASTER_HOST=mysql-master
+      - MYSQL_MASTER_PORT_NUMBER=3306
+      - MYSQL_MASTER_ROOT_PASSWORD=my-secret-pw
+      - ALLOW_EMPTY_PASSWORD=no
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/mysql/healthcheck.sh']
+      interval: 15s
+      timeout: 5s
+      retries: 6
+    networks:
+      - net-replication
+
+networks:
+  net-replication:
+    driver: "bridge"
